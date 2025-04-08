@@ -159,7 +159,7 @@ if uploaded_file:
 
         with tab3:
             st.header("Brine Case AVO Modeling")
-    try:
+        try:
         # Get properties for selected zone
         vp = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VP_FRMB'].values
         vs = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VS_FRMB'].values
