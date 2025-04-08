@@ -114,35 +114,35 @@ if uploaded_file is not None:
             mu = np.resize(np.array(mu), np.shape(f))
 
             k_u = np.sum(f*k, axis=1)
-            k_l = 1./np.sum(f/k, axis=1)
+            k_l = 1. / np.sum(f/k, axis=1)
             mu_u = np.sum(f*mu, axis=1)
-            mu_l = 1./np.sum(f/mu, axis=1)
-            k0 = (k_u+k_l)/2.
-            mu0 = (mu_u+mu_l)/2.
+            mu_l = 1. / np.sum(f/mu, axis=1)
+            k0 = (k_u+k_l) / 2.
+            mu0 = (mu_u+mu_l) / 2.
             return k_u, k_l, mu_u, mu_l, k0, mu0
 
         # FRM function
         def frm(vp1, vs1, rho1, rho_f1, k_f1, rho_f2, k_f2, k0, phi):
-            vp1 = vp1/1000.
-            vs1 = vs1/1000.
-            mu1 = rho1*vs1**2.
-            k_s1 = rho1*vp1**2 - (4./3.)*mu1
+            vp1 = vp1 / 1000.
+            vs1 = vs1 / 1000.
+            mu1 = rho1 * vs1**2.
+            k_s1 = rho1 * vp1**2 - (4./3.)*mu1
 
-            kdry = (k_s1*((phi*k0)/k_f1+1-phi)-k0)/((phi*k0)/k_f1+(k_s1/k0)-1-phi)
+            kdry = (k_s1 * ((phi*k0)/k_f1+1-phi)-k0) / ((phi*k0)/k_f1+(k_s1/k0)-1-phi)
 
-            k_s2 = kdry + (1-(kdry/k0))**2/((phi/k_f2)+((1-phi)/k0)-(kdry/k0**2))
-            rho2 = rho1-phi*rho_f1+phi*rho_f2
+            k_s2 = kdry + (1- (kdry/k0))**2 / ( (phi/k_f2) + ((1-phi)/k0) - (kdry/k0**2) )
+            rho2 = rho1-phi * rho_f1+phi * rho_f2
             mu2 = mu1
-            vp2 = np.sqrt((k_s2+(4./3)*mu2)/rho2)
-            vs2 = np.sqrt(mu2/rho2)
+            vp2 = np.sqrt(((k_s2+(4./3)*mu2))/rho2)
+            vs2 = np.sqrt((mu2/rho2))
 
             return vp2*1000, vs2*1000, rho2, k_s2
 
         # Perform FRM
         shale = logs[vsh_col].values
         sand = 1 - shale - logs[phi_col].values
-        shaleN = shale/(shale+sand)
-        sandN = sand/(shale+sand)
+        shaleN = shale / (shale+sand)
+        sandN = sand / (shale+sand)
         k_u, k_l, mu_u, mu_l, k0, mu0 = vrh([shaleN, sandN], [k_sh, k_qz], [mu_sh, mu_qz])
 
         water = logs[sw_col].values
@@ -156,17 +156,17 @@ if uploaded_file is not None:
         vpg, vsg, rhog, kg = frm(logs[vp_col], logs[vs_col], logs[rho_col], rho_fl, k_fl, rho_g, k_g, k0, logs[phi_col])
 
         # Lithology classification
-        brine_sand = ((logs[vsh_col] <= sand_cutoff) & (logs[sw_col])) >= 0.65
-        oil_sand = ((logs[vsh_col] <= sand_cutoff) & (logs[sw_col])) < 0.65
+        brine_sand = ((logs[vsh_col] <= sand_cutoff) & (logs[sw_col] >= 0.65))
+        oil_sand = ((logs[vsh_col] <= sand_cutoff) & (logs[sw_col] < 0.65))
         shale_flag = (logs[vsh_col] > sand_cutoff)
 
         # Add results to dataframe
         logs['VP_FRMB'] = logs[vp_col]
         logs['VS_FRMB'] = logs[vs_col]
         logs['RHO_FRMB'] = logs[rho_col]
-        logs.loc[brine_sand|oil_sand, 'VP_FRMB'] = vpb[brine_sand|oil_sand]
-        logs.loc[brine_sand|oil_sand, 'VS_FRMB'] = vsb[brine_sand|oil_sand]
-        logs.loc[brine_sand|oil_sand, 'RHO_FRMB'] = rhob[brine_sand|oil_sand]
+        logs['VP_FRMB'][brine_sand|oil_sand] = vpb[brine_sand|oil_sand]
+        logs['VS_FRMB'][brine_sand|oil_sand] = vsb[brine_sand|oil_sand]
+        logs['RHO_FRMB'][brine_sand|oil_sand] = rhob[brine_sand|oil_sand]
         logs['IP_FRMB'] = logs.VP_FRMB*logs.RHO_FRMB
         logs['IS_FRMB'] = logs.VS_FRMB*logs.RHO_FRMB
         logs['VPVS_FRMB'] = logs.VP_FRMB/logs.VS_FRMB
@@ -174,9 +174,9 @@ if uploaded_file is not None:
         logs['VP_FRMO'] = logs[vp_col]
         logs['VS_FRMO'] = logs[vs_col]
         logs['RHO_FRMO'] = logs[rho_col]
-        logs.loc[brine_sand|oil_sand, 'VP_FRMO'] = vpo[brine_sand|oil_sand]
-        logs.loc[brine_sand|oil_sand, 'VS_FRMO'] = vso[brine_sand|oil_sand]
-        logs.loc[brine_sand|oil_sand, 'RHO_FRMO'] = rhoo[brine_sand|oil_sand]
+        logs['VP_FRMO'][brine_sand|oil_sand] = vpo[brine_sand|oil_sand]
+        logs['VS_FRMO'][brine_sand|oil_sand] = vso[brine_sand|oil_sand]
+        logs['RHO_FRMO'][brine_sand|oil_sand] = rhoo[brine_sand|oil_sand]
         logs['IP_FRMO'] = logs.VP_FRMO*logs.RHO_FRMO
         logs['IS_FRMO'] = logs.VS_FRMO*logs.RHO_FRMO
         logs['VPVS_FRMO'] = logs.VP_FRMO/logs.VS_FRMO
@@ -184,17 +184,28 @@ if uploaded_file is not None:
         logs['VP_FRMG'] = logs[vp_col]
         logs['VS_FRMG'] = logs[vs_col]
         logs['RHO_FRMG'] = logs[rho_col]
-        logs.loc[brine_sand|oil_sand, 'VP_FRMG'] = vpg[brine_sand|oil_sand]
-        logs.loc[brine_sand|oil_sand, 'VS_FRMG'] = vsg[brine_sand|oil_sand]
-        logs.loc[brine_sand|oil_sand, 'RHO_FRMG'] = rhog[brine_sand|oil_sand]
+        logs['VP_FRMG'][brine_sand|oil_sand] = vpg[brine_sand|oil_sand]
+        logs['VS_FRMG'][brine_sand|oil_sand] = vsg[brine_sand|oil_sand]
+        logs['RHO_FRMG'][brine_sand|oil_sand] = rhog[brine_sand|oil_sand]
         logs['IP_FRMG'] = logs.VP_FRMG*logs.RHO_FRMG
         logs['IS_FRMG'] = logs.VS_FRMG*logs.RHO_FRMG
         logs['VPVS_FRMG'] = logs.VP_FRMG/logs.VS_FRMG
 
         # LFC flags
-        logs['LFC_B'] = np.where(shale_flag, 4, np.where(brine_sand | oil_sand, 1, 0))
-        logs['LFC_O'] = np.where(shale_flag, 4, np.where(brine_sand | oil_sand, 2, 0))
-        logs['LFC_G'] = np.where(shale_flag, 4, np.where(brine_sand | oil_sand, 3, 0))
+        temp_lfc_b = np.zeros(np.shape(logs[vsh_col]))
+        temp_lfc_b[brine_sand.values | oil_sand.values] = 1
+        temp_lfc_b[shale_flag.values] = 4
+        logs['LFC_B'] = temp_lfc_b
+
+        temp_lfc_o = np.zeros(np.shape(logs[vsh_col]))
+        temp_lfc_o[brine_sand.values | oil_sand.values] = 2
+        temp_lfc_o[shale_flag.values] = 4
+        logs['LFC_O'] = temp_lfc_o
+
+        temp_lfc_g = np.zeros(np.shape(logs[vsh_col]))
+        temp_lfc_g[brine_sand.values | oil_sand.values] = 3
+        temp_lfc_g[shale_flag.values] = 4
+        logs['LFC_G'] = temp_lfc_g
 
         # Create tabs for different visualizations
         tab1, tab2, tab3, tab4 = st.tabs(["Well Logs", "Crossplots", "Brine Case", "Oil & Gas Cases"])
@@ -274,25 +285,37 @@ if uploaded_file is not None:
             st.header("Brine Case AVO Modeling")
             
             try:
-                # Get properties for the selected zone
+                # Get average properties for the selected zone
                 vp_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VP_FRMB'].values
                 vs_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VS_FRMB'].values
                 rho_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'RHO_FRMB'].values
                 
-                # Convert and clean data
-                vp_u = np.nan_to_num(vp_u.astype(float), nan=np.nanmean(vp_u))
-                vs_u = np.nan_to_num(vs_u.astype(float), nan=np.nanmean(vs_u))
-                rho_u = np.nan_to_num(rho_u.astype(float), nan=np.nanmean(rho_u))
+                # Convert to numpy arrays and handle potential NaN values
+                vp_u = np.array(vp_u, dtype=float)
+                vs_u = np.array(vs_u, dtype=float)
+                rho_u = np.array(rho_u, dtype=float)
                 
-                # Calculate layer properties
-                vp_mean = float(np.nanmean(vp_u))
-                vp_data = np.array([vp_mean, vp_mean * 0.95, vp_mean * 1.05])
+                if np.isnan(vp_u).any() or np.isnan(vs_u).any() or np.isnan(rho_u).any():
+                    vp_u = np.nan_to_num(vp_u, nan=np.nanmean(vp_u))
+                    vs_u = np.nan_to_num(vs_u, nan=np.nanmean(vs_u))
+                    rho_u = np.nan_to_num(rho_u, nan=np.nanmean(rho_u))
                 
-                vs_mean = float(np.nanmean(vs_u))
-                vs_data = np.array([vs_mean, vs_mean * 0.95, vs_mean * 1.05])
-                
-                rho_mean = float(np.nanmean(rho_u))
-                rho_data = np.array([rho_mean, rho_mean * 0.95, rho_mean * 1.05])
+                # Create numpy arrays for the three layers (FIXED: Explicit float conversion)
+                vp_data = np.array([
+                    float(np.nanmean(vp_u)),
+                    float(np.nanmean(vp_u)) * 0.95,
+                    float(np.nanmean(vp_u)) * 1.05
+                ])
+                vs_data = np.array([
+                    float(np.nanmean(vs_u)),
+                    float(np.nanmean(vs_u)) * 0.95,
+                    float(np.nanmean(vs_u)) * 1.05
+                ])
+                rho_data = np.array([
+                    float(np.nanmean(rho_u)),
+                    float(np.nanmean(rho_u)) * 0.95,
+                    float(np.nanmean(rho_u)) * 1.05
+                ])
                 
                 # Generate AVO response
                 nangles = tp.n_angles(0, max_angle)
@@ -366,32 +389,42 @@ if uploaded_file is not None:
             st.header("Oil & Gas Cases AVO Modeling")
             
             try:
-                # Calculate nangles here to ensure it's defined
-                nangles = tp.n_angles(0, max_angle)
-                angles = np.arange(0, max_angle+1)
-                
                 col1, col2 = st.columns(2)
                 
                 with col1:
                     st.subheader("Oil Case")
                     
-                    # Oil case properties
+                    # Get average properties for oil case (FIXED: Removed stray "]")
                     vp_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VP_FRMO'].values
                     vs_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VS_FRMO'].values
                     rho_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'RHO_FRMO'].values
                     
-                    vp_u = np.nan_to_num(vp_u.astype(float), nan=np.nanmean(vp_u))
-                    vs_u = np.nan_to_num(vs_u.astype(float), nan=np.nanmean(vs_u))
-                    rho_u = np.nan_to_num(rho_u.astype(float), nan=np.nanmean(rho_u))
+                    # Convert to numpy arrays and handle potential NaN values
+                    vp_u = np.array(vp_u, dtype=float)
+                    vs_u = np.array(vs_u, dtype=float)
+                    rho_u = np.array(rho_u, dtype=float)
                     
-                    vp_mean = float(np.nanmean(vp_u))
-                    vp_data = np.array([vp_mean, vp_mean * 0.95, vp_mean * 1.05])
+                    if np.isnan(vp_u).any() or np.isnan(vs_u).any() or np.isnan(rho_u).any():
+                        vp_u = np.nan_to_num(vp_u, nan=np.nanmean(vp_u))
+                        vs_u = np.nan_to_num(vs_u, nan=np.nanmean(vs_u))
+                        rho_u = np.nan_to_num(rho_u, nan=np.nanmean(rho_u))
                     
-                    vs_mean = float(np.nanmean(vs_u))
-                    vs_data = np.array([vs_mean, vs_mean * 0.95, vs_mean * 1.05])
-                    
-                    rho_mean = float(np.nanmean(rho_u))
-                    rho_data = np.array([rho_mean, rho_mean * 0.95, rho_mean * 1.05])
+                    # Create numpy arrays for the three layers
+                    vp_data = np.array([
+                        float(np.nanmean(vp_u)),
+                        float(np.nanmean(vp_u)) * 0.95,
+                        float(np.nanmean(vp_u)) * 1.05
+                    ])
+                    vs_data = np.array([
+                        float(np.nanmean(vs_u)),
+                        float(np.nanmean(vs_u)) * 0.95,
+                        float(np.nanmean(vs_u)) * 1.05
+                    ])
+                    rho_data = np.array([
+                        float(np.nanmean(rho_u)),
+                        float(np.nanmean(rho_u)) * 0.95,
+                        float(np.nanmean(rho_u)) * 1.05
+                    ])
                     
                     # Generate AVO response for oil
                     rc_zoep_o = []
@@ -444,23 +477,37 @@ if uploaded_file is not None:
                 with col2:
                     st.subheader("Gas Case")
                     
-                    # Gas case properties
+                    # Get average properties for gas case
                     vp_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VP_FRMG'].values
                     vs_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VS_FRMG'].values
                     rho_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'RHO_FRMG'].values
                     
-                    vp_u = np.nan_to_num(vp_u.astype(float), nan=np.nanmean(vp_u))
-                    vs_u = np.nan_to_num(vs_u.astype(float), nan=np.nanmean(vs_u))
-                    rho_u = np.nan_to_num(rho_u.astype(float), nan=np.nanmean(rho_u))
+                    # Convert to numpy arrays and handle potential NaN values
+                    vp_u = np.array(vp_u, dtype=float)
+                    vs_u = np.array(vs_u, dtype=float)
+                    rho_u = np.array(rho_u, dtype=float)
                     
-                    vp_mean = float(np.nanmean(vp_u))
-                    vp_data = np.array([vp_mean, vp_mean * 0.95, vp_mean * 1.05])
+                    if np.isnan(vp_u).any() or np.isnan(vs_u).any() or np.isnan(rho_u).any():
+                        vp_u = np.nan_to_num(vp_u, nan=np.nanmean(vp_u))
+                        vs_u = np.nan_to_num(vs_u, nan=np.nanmean(vs_u))
+                        rho_u = np.nan_to_num(rho_u, nan=np.nanmean(rho_u))
                     
-                    vs_mean = float(np.nanmean(vs_u))
-                    vs_data = np.array([vs_mean, vs_mean * 0.95, vs_mean * 1.05])
-                    
-                    rho_mean = float(np.nanmean(rho_u))
-                    rho_data = np.array([rho_mean, rho_mean * 0.95, rho_mean * 1.05])
+                    # Create numpy arrays for the three layers
+                    vp_data = np.array([
+                        float(np.nanmean(vp_u)),
+                        float(np.nanmean(vp_u)) * 0.95,
+                        float(np.nanmean(vp_u)) * 1.05
+                    ])
+                    vs_data = np.array([
+                        float(np.nanmean(vs_u)),
+                        float(np.nanmean(vs_u)) * 0.95,
+                        float(np.nanmean(vs_u)) * 1.05
+                    ])
+                    rho_data = np.array([
+                        float(np.nanmean(rho_u)),
+                        float(np.nanmean(rho_u)) * 0.95,
+                        float(np.nanmean(rho_u)) * 1.05
+                    ])
                     
                     # Generate AVO response for gas
                     rc_zoep_g = []
