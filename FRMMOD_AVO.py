@@ -355,9 +355,9 @@ if uploaded_file is not None:
                 st.subheader("Oil Case")
                 
                 # Get average properties for oil case
-                vp_o = logs.loc[((logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VP_FRMO'].values
-                vs_o = logs.loc[((logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VS_FRMO'].values
-                rho_o = logs.loc[((logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'RHO_FRMO'].values
+                vp_o = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VP_FRMO'].values
+                vs_o = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VS_FRMO'].values
+                rho_o = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'RHO_FRMO'].values
                 
                 vp_data_o = [vp_o.mean(), vp_o.mean()*0.95, vp_o.mean()*1.05]
                 vs_data_o = [vs_o.mean(), vs_o.mean()*0.95, vs_o.mean()*1.05]
@@ -405,9 +405,9 @@ if uploaded_file is not None:
                 st.subheader("Gas Case")
                 
                 # Get average properties for gas case
-                vp_g = logs.loc[((logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VP_FRMG'].values
-                vs_g = logs.loc[((logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VS_FRMG'].values
-                rho_g = logs.loc[((logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'RHO_FRMG'].values
+                vp_g = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VP_FRMG'].values
+                vs_g = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VS_FRMG'].values
+                rho_g = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'RHO_FRMG'].values
                 
                 vp_data_g = [vp_g.mean(), vp_g.mean()*0.95, vp_g.mean()*1.05]
                 vs_data_g = [vs_g.mean(), vs_g.mean()*0.95, vs_g.mean()*1.05]
