@@ -203,7 +203,7 @@ if uploaded_file is not None:
             st.header("Well Log Visualization")
     
     # Filter logs for selected depth range
-             ll = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot)]
+            ll = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot)]
     
     # Create cluster for facies display - FIXED VERSION
     cluster_data = np.expand_dims(ll['LFC_B'].values, axis=1)
