@@ -201,53 +201,52 @@ if uploaded_file is not None:
 
         with tab1:
             st.header("Well Log Visualization")
-    
-    # Filter logs for selected depth range
+            
+            # Filter logs for selected depth range
             ll = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot)]
-    
-    # Create cluster for facies display - FIXED VERSION
-     cluster_data = np.expand_dims(ll['LFC_B'].values, axis=1)
-     cluster = np.repeat(cluster_data, 100, axis=1)
-    
-    ccc = ['#B3B3B3', 'blue', 'green', 'red', '#996633']
-    cmap_facies = colors.ListedColormap(ccc[0:len(ccc)], 'indexed')
+            
+            # Create cluster for facies display - PROPERLY INDENTED
+            cluster_data = np.expand_dims(ll['LFC_B'].values, axis=1)
+            cluster = np.repeat(cluster_data, 100, axis=1)
+            
+            ccc = ['#B3B3B3', 'blue', 'green', 'red', '#996633']
+            cmap_facies = colors.ListedColormap(ccc[0:len(ccc)], 'indexed')
 
-    # Rest of the plotting code remains the same...
-    fig, ax = plt.subplots(nrows=1, ncols=4, figsize=(12, 8))
-    ax[0].plot(ll[vsh_col], ll[depth_col], '-g', label='Vsh')
-    ax[0].plot(ll[sw_col], ll[depth_col], '-b', label='Sw')
-    ax[0].plot(ll[phi_col], ll[depth_col], '-k', label='phi')
-    ax[1].plot(ll.IP_FRMG, ll[depth_col], '-r')
-    ax[1].plot(ll.IP_FRMB, ll[depth_col], '-b')
-    ax[1].plot(ll[vp_col]*ll[rho_col], ll[depth_col], '-', color='0.5')
-    ax[2].plot(ll.VPVS_FRMG, ll[depth_col], '-r')
-    ax[2].plot(ll.VPVS_FRMB, ll[depth_col], '-b')
-    ax[2].plot(ll[vp_col]/ll[vs_col], ll[depth_col], '-', color='0.5')
-    im = ax[3].imshow(cluster, interpolation='none', aspect='auto', cmap=cmap_facies, vmin=0, vmax=4)
+            # Plot logs
+            fig, ax = plt.subplots(nrows=1, ncols=4, figsize=(12, 8))
+            ax[0].plot(ll[vsh_col], ll[depth_col], '-g', label='Vsh')
+            ax[0].plot(ll[sw_col], ll[depth_col], '-b', label='Sw')
+            ax[0].plot(ll[phi_col], ll[depth_col], '-k', label='phi')
+            ax[1].plot(ll.IP_FRMG, ll[depth_col], '-r')
+            ax[1].plot(ll.IP_FRMB, ll[depth_col], '-b')
+            ax[1].plot(ll[vp_col]*ll[rho_col], ll[depth_col], '-', color='0.5')
+            ax[2].plot(ll.VPVS_FRMG, ll[depth_col], '-r')
+            ax[2].plot(ll.VPVS_FRMB, ll[depth_col], '-b')
+            ax[2].plot(ll[vp_col]/ll[vs_col], ll[depth_col], '-', color='0.5')
+            im = ax[3].imshow(cluster, interpolation='none', aspect='auto', cmap=cmap_facies, vmin=0, vmax=4)
 
-    # Format plots
-    for i in ax[:-1]:
-        i.set_ylim(ztop, zbot)
-        i.invert_yaxis()
-        i.grid()
-        i.locator_params(axis='x', nbins=4)
-    
-    ax[0].legend(fontsize='small', loc='lower right')
-    ax[0].set_xlabel("Vcl/phi/Sw")
-    ax[0].set_xlim(-.1, 1.1)
-    ax[1].set_xlabel("Ip [m/s*g/cc]")
-    ax[1].set_xlim(6000, 15000)
-    ax[2].set_xlabel("Vp/Vs")
-    ax[2].set_xlim(1.5, 2)
-    ax[3].set_xlabel('LFC')
-    ax[1].set_yticklabels([])
-    ax[2].set_yticklabels([])
-    ax[3].set_yticklabels([])
-    ax[3].set_xticklabels([])
-    
-    plt.tight_layout()
-    st.pyplot(fig)
-
+            # Format plots
+            for i in ax[:-1]:
+                i.set_ylim(ztop, zbot)
+                i.invert_yaxis()
+                i.grid()
+                i.locator_params(axis='x', nbins=4)
+            
+            ax[0].legend(fontsize='small', loc='lower right')
+            ax[0].set_xlabel("Vcl/phi/Sw")
+            ax[0].set_xlim(-.1, 1.1)
+            ax[1].set_xlabel("Ip [m/s*g/cc]")
+            ax[1].set_xlim(6000, 15000)
+            ax[2].set_xlabel("Vp/Vs")
+            ax[2].set_xlim(1.5, 2)
+            ax[3].set_xlabel('LFC')
+            ax[1].set_yticklabels([])
+            ax[2].set_yticklabels([])
+            ax[3].set_yticklabels([])
+            ax[3].set_xticklabels([])
+            
+            plt.tight_layout()
+            st.pyplot(fig)
         with tab2:
             st.header("Crossplot Analysis")
             
