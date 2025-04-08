@@ -7,10 +7,6 @@ from pyavo.seismodel import tuning_prestack as tp
 from pyavo.seismodel import wavelet
 import traceback
 
-from pyavo.seismodel import tuning_wedge as tw
-from pyavo.seismodel import wavelet
-import numpy as np
-
 # Set page config
 st.set_page_config(layout="wide", page_title="Seismic Fluid Replacement Modeling")
 
@@ -301,8 +297,9 @@ if uploaded_file is not None:
                 for angle in range(0, nangles):
                     theta1_samp, rc_1, rc_2 = tp.calc_theta_rc(theta1_min=0, theta1_step=1, 
                                                               vp=vp_data, vs=vs_data, rho=rho_data, ang=angle)
-                    theta1.append(theta1_samp)
-                    rc_zoep.append([rc_1[0, 0], rc_2[0, 0]])
+                    if rc_1.size > 0 and rc_2.size > 0:  # Check for valid results
+                        theta1.append(theta1_samp)
+                        rc_zoep.append([rc_1[0, 0], rc_2[0, 0]])
                 
                 # Generate wavelet
                 wlt_time, wlt_amp = wavelet.ricker(sample_rate=sample_rate/1000, length=wlt_length/1000, c_freq=freq)
@@ -316,11 +313,17 @@ if uploaded_file is not None:
                 for angle in range(0, nangles):
                     z_int = tp.int_depth(h_int=[500.0], thickness=10)
                     t_int = tp.calc_times(z_int, vp_data)
-                    lyr_times[angle] = t_int[0]  # Store single value
-                    rc = tp.mod_digitize(rc_zoep[angle], [t_int[0]], t_samp)  # Pass as list with one element
-                    syn_zoep[angle] = tp.syn_seis(ref_coef=rc, wav_amp=wlt_amp)
-                
-                rc_zoep = np.array(rc_zoep)
+                    
+                    # Ensure we have valid time values
+                    if len(t_int) == 0:
+                        t_int = [0.0]  # Default value if empty
+                    
+                    lyr_times[angle] = t_int[0]  # Store first time value
+                    
+                    # Ensure we have valid reflection coefficients
+                    if angle < len(rc_zoep) and len(rc_zoep[angle]) == 2:
+                        rc = tp.mod_digitize(rc_zoep[angle], np.array([t_int[0]]), t_samp)
+                        syn_zoep[angle] = tp.syn_seis(ref_coef=rc, wav_amp=wlt_amp)
                 
                 # Create figure with 3 panels
                 fig = plt.figure(figsize=(18, 6))
@@ -334,7 +337,7 @@ if uploaded_file is not None:
                                           np.array([vp_mean]), np.array([vs_mean]),
                                           np.array([rho_mean]), np.array([vp_mean/vs_mean]),
                                           np.array([vp_mean*rho_mean]), syn_zoep,
-                                          rc_zoep, t, excursion)
+                                          np.array(rc_zoep), t, excursion)
                         ax1.set_title(f'Brine Case - {freq}Hz Wavelet')
                     except Exception as e:
                         st.error(f"AVO Gather Error: {str(e)}")
@@ -343,8 +346,9 @@ if uploaded_file is not None:
                 # AVO Curves
                 ax2 = fig.add_subplot(gs[1])
                 angles = np.arange(0, max_angle+1)
-                ax2.plot(angles, rc_zoep[:, 0], 'b-', label='Upper Interface')
-                ax2.plot(angles, rc_zoep[:, 1], 'r-', label='Lower Interface')
+                if len(rc_zoep) > 0:
+                    ax2.plot(angles[:len(rc_zoep)], np.array(rc_zoep)[:, 0], 'b-', label='Upper Interface')
+                    ax2.plot(angles[:len(rc_zoep)], np.array(rc_zoep)[:, 1], 'r-', label='Lower Interface')
                 ax2.set_xlabel('Angle (degrees)')
                 ax2.set_ylabel('Reflection Coefficient')
                 ax2.set_title('AVO Response')
@@ -390,18 +394,24 @@ if uploaded_file is not None:
                     rho_data = [rho_mean, rho_mean*0.95, rho_mean*1.05]
                     
                     # Generate AVO response with proper dimensions
-                    rc_zoep_o = np.zeros((nangles, 2))
+                    rc_zoep_o = []
                     for angle in range(0, nangles):
                         theta1_samp, rc_1, rc_2 = tp.calc_theta_rc(theta1_min=0, theta1_step=1,
                                                                   vp=vp_data, vs=vs_data, rho=rho_data, ang=angle)
-                        rc_zoep_o[angle] = [rc_1[0, 0], rc_2[0, 0]]
+                        if rc_1.size > 0 and rc_2.size > 0:  # Check for valid results
+                            rc_zoep_o.append([rc_1[0, 0], rc_2[0, 0]])
                     
                     # Generate synthetic gathers with proper dimensions
                     syn_zoep_o = np.zeros((nangles, len(t_samp)))
                     for angle in range(0, nangles):
-                        t_int = np.array([lyr_times[angle]])  # Ensure array input
-                        rc = tp.mod_digitize(rc_zoep_o[angle], t_int, t_samp)
-                        syn_zoep_o[angle] = tp.syn_seis(ref_coef=rc, wav_amp=wlt_amp)
+                        # Ensure we have a valid time value
+                        t_int_val = lyr_times[angle] if angle < len(lyr_times) else 0.0
+                        t_int = np.array([t_int_val])  # Ensure 1-element array
+                        
+                        # Ensure we have valid reflection coefficients
+                        if angle < len(rc_zoep_o) and len(rc_zoep_o[angle]) == 2:
+                            rc = tp.mod_digitize(rc_zoep_o[angle], t_int, t_samp)
+                            syn_zoep_o[angle] = tp.syn_seis(ref_coef=rc, wav_amp=wlt_amp)
                     
                     # Create figure for oil case
                     fig = plt.figure(figsize=(18, 6))
@@ -415,7 +425,7 @@ if uploaded_file is not None:
                                               np.array([vp_mean]), np.array([vs_mean]),
                                               np.array([rho_mean]), np.array([vp_mean/vs_mean]),
                                               np.array([vp_mean*rho_mean]), syn_zoep_o,
-                                              rc_zoep_o, t, excursion)
+                                              np.array(rc_zoep_o), t, excursion)
                             ax1.set_title('Oil Case')
                         except Exception as e:
                             st.error(f"Oil AVO Gather Error: {str(e)}")
@@ -423,8 +433,10 @@ if uploaded_file is not None:
                     
                     # AVO Curves
                     ax2 = fig.add_subplot(gs[1])
-                    ax2.plot(angles, rc_zoep_o[:, 0], 'b-', label='Upper Interface')
-                    ax2.plot(angles, rc_zoep_o[:, 1], 'r-', label='Lower Interface')
+                    angles = np.arange(0, max_angle+1)
+                    if len(rc_zoep_o) > 0:
+                        ax2.plot(angles[:len(rc_zoep_o)], np.array(rc_zoep_o)[:, 0], 'b-', label='Upper Interface')
+                        ax2.plot(angles[:len(rc_zoep_o)], np.array(rc_zoep_o)[:, 1], 'r-', label='Lower Interface')
                     ax2.set_xlabel('Angle (degrees)')
                     ax2.set_ylabel('Reflection Coefficient')
                     ax2.set_title('Oil AVO Response')
@@ -460,18 +472,24 @@ if uploaded_file is not None:
                     rho_data = [rho_mean, rho_mean*0.95, rho_mean*1.05]
                     
                     # Generate AVO response with proper dimensions
-                    rc_zoep_g = np.zeros((nangles, 2))
+                    rc_zoep_g = []
                     for angle in range(0, nangles):
                         theta1_samp, rc_1, rc_2 = tp.calc_theta_rc(theta1_min=0, theta1_step=1,
                                                                   vp=vp_data, vs=vs_data, rho=rho_data, ang=angle)
-                        rc_zoep_g[angle] = [rc_1[0, 0], rc_2[0, 0]]
+                        if rc_1.size > 0 and rc_2.size > 0:  # Check for valid results
+                            rc_zoep_g.append([rc_1[0, 0], rc_2[0, 0]])
                     
                     # Generate synthetic gathers with proper dimensions
                     syn_zoep_g = np.zeros((nangles, len(t_samp)))
                     for angle in range(0, nangles):
-                        t_int = np.array([lyr_times[angle]])  # Ensure array input
-                        rc = tp.mod_digitize(rc_zoep_g[angle], t_int, t_samp)
-                        syn_zoep_g[angle] = tp.syn_seis(ref_coef=rc, wav_amp=wlt_amp)
+                        # Ensure we have a valid time value
+                        t_int_val = lyr_times[angle] if angle < len(lyr_times) else 0.0
+                        t_int = np.array([t_int_val])  # Ensure 1-element array
+                        
+                        # Ensure we have valid reflection coefficients
+                        if angle < len(rc_zoep_g) and len(rc_zoep_g[angle]) == 2:
+                            rc = tp.mod_digitize(rc_zoep_g[angle], t_int, t_samp)
+                            syn_zoep_g[angle] = tp.syn_seis(ref_coef=rc, wav_amp=wlt_amp)
                     
                     # Create figure for gas case
                     fig = plt.figure(figsize=(18, 6))
@@ -485,7 +503,7 @@ if uploaded_file is not None:
                                               np.array([vp_mean]), np.array([vs_mean]),
                                               np.array([rho_mean]), np.array([vp_mean/vs_mean]),
                                               np.array([vp_mean*rho_mean]), syn_zoep_g,
-                                              rc_zoep_g, t, excursion)
+                                              np.array(rc_zoep_g), t, excursion)
                             ax1.set_title('Gas Case')
                         except Exception as e:
                             st.error(f"Gas AVO Gather Error: {str(e)}")
@@ -493,8 +511,10 @@ if uploaded_file is not None:
                     
                     # AVO Curves
                     ax2 = fig.add_subplot(gs[1])
-                    ax2.plot(angles, rc_zoep_g[:, 0], 'b-', label='Upper Interface')
-                    ax2.plot(angles, rc_zoep_g[:, 1], 'r-', label='Lower Interface')
+                    angles = np.arange(0, max_angle+1)
+                    if len(rc_zoep_g) > 0:
+                        ax2.plot(angles[:len(rc_zoep_g)], np.array(rc_zoep_g)[:, 0], 'b-', label='Upper Interface')
+                        ax2.plot(angles[:len(rc_zoep_g)], np.array(rc_zoep_g)[:, 1], 'r-', label='Lower Interface')
                     ax2.set_xlabel('Angle (degrees)')
                     ax2.set_ylabel('Reflection Coefficient')
                     ax2.set_title('Gas AVO Response')
