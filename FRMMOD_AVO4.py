@@ -166,7 +166,7 @@ if uploaded_file:
             rho = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'RHO_FRMB'].values
         
         # Create two layers with 5% contrast
-        vp_mean = np.nanmean(vp)
+         vp_mean = np.nanmean(vp)
         vs_mean = np.nanmean(vs)
         rho_mean = np.nanmean(rho)
         
