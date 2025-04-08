@@ -282,12 +282,14 @@ if uploaded_file is not None:
             st.pyplot(fig)
 
         with tab3:
-            st.header("Brine Case AVO Modeling")
+                st.header("Brine Case AVO Modeling")
     
-    # Get average properties for the selected zone
-    vp_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VP_FRMB'].values
-    vs_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VS_FRMB'].values
-    rho_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'RHO_FRMB'].values
+    try:  # <-- Ensure this is aligned under `with tab3:`
+        # Get average properties for the selected zone
+        vp_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VP_FRMB'].values
+        vs_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VS_FRMB'].values
+        rho_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'RHO_FRMB'].values
+        
     
     vp_data = [vp_u.mean(), vp_u.mean()*0.95, vp_u.mean()*1.05]  # Simple 3-layer model
     vs_data = [vs_u.mean(), vs_u.mean()*0.95, vs_u.mean()*1.05]
