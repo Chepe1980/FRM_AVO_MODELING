@@ -305,7 +305,7 @@ if uploaded_file is not None:
                 t_samp = tp.time_samples(t_min=0, t_max=0.5)
                 
                 # Generate synthetic gathers
-                syn_zoep = []
+                syn_zoep = np.zeros((nangles, len(t_samp)))  # Pre-allocate array
                 lyr_times = []
                 
                 for angle in range(0, nangles):
@@ -313,13 +313,11 @@ if uploaded_file is not None:
                     t_int = tp.calc_times(z_int, vp_data)
                     lyr_times.append(t_int)
                     rc = tp.mod_digitize(rc_zoep[angle], t_int, t_samp)
-                    s = tp.syn_seis(ref_coef=rc, wav_amp=wlt_amp)
-                    syn_zoep.append(s)
+                    syn_zoep[angle] = tp.syn_seis(ref_coef=rc, wav_amp=wlt_amp)
                 
-                syn_zoep = np.array(syn_zoep)
                 rc_zoep = np.array(rc_zoep)
                 t = np.array(t_samp)
-                lyr_times = np.array(lyr_times)
+                lyr_times = np.array(lyr_times).flatten()  # Ensure 1D array
                 
                 # Create figure with 3 panels
                 fig = plt.figure(figsize=(18, 6))
@@ -327,9 +325,17 @@ if uploaded_file is not None:
                 
                 # AVO Gather
                 ax1 = fig.add_subplot(gs[0])
-                tp.syn_angle_gather(0.1, 0.25, lyr_times, thickness, [], [], 
-                                   [], [], [], syn_zoep, rc_zoep, t, excursion)
-                ax1.set_title(f'Brine Case - {freq}Hz Wavelet')
+                with st.spinner('Generating Brine AVO Gather...'):
+                    try:
+                        tp.syn_angle_gather(0.1, 0.25, lyr_times, thickness, 
+                                          np.array([]), np.array([]),
+                                          np.array([]), np.array([]),
+                                          np.array([]), syn_zoep,
+                                          rc_zoep, t, excursion)
+                        ax1.set_title(f'Brine Case - {freq}Hz Wavelet')
+                    except Exception as e:
+                        st.error(f"AVO Gather Error: {str(e)}")
+                        st.text(traceback.format_exc())
                 
                 # AVO Curves
                 ax2 = fig.add_subplot(gs[1])
@@ -354,7 +360,7 @@ if uploaded_file is not None:
                 st.pyplot(fig)
 
             except Exception as e:
-                st.error(f"An error occurred in Brine Case AVO Modeling: {str(e)}")
+                st.error(f"Brine Case AVO Modeling Error: {str(e)}")
                 st.text(traceback.format_exc())
 
         with tab4:
@@ -388,13 +394,11 @@ if uploaded_file is not None:
                         rc_zoep_o.append([rc_1[0, 0], rc_2[0, 0]])
                     
                     # Generate synthetic gathers for oil
-                    syn_zoep_o = []
+                    syn_zoep_o = np.zeros((nangles, len(t_samp)))
                     for angle in range(0, nangles):
                         rc = tp.mod_digitize(rc_zoep_o[angle], lyr_times[angle], t_samp)
-                        s = tp.syn_seis(ref_coef=rc, wav_amp=wlt_amp)
-                        syn_zoep_o.append(s)
+                        syn_zoep_o[angle] = tp.syn_seis(ref_coef=rc, wav_amp=wlt_amp)
                     
-                    syn_zoep_o = np.array(syn_zoep_o)
                     rc_zoep_o = np.array(rc_zoep_o)
                     
                     # Create figure for oil case
@@ -403,9 +407,17 @@ if uploaded_file is not None:
                     
                     # AVO Gather
                     ax1 = fig.add_subplot(gs[0])
-                    tp.syn_angle_gather(0.1, 0.25, lyr_times, thickness, [], [], 
-                                      [], [], [], syn_zoep_o, rc_zoep_o, t, excursion)
-                    ax1.set_title('Oil Case')
+                    with st.spinner('Generating Oil AVO Gather...'):
+                        try:
+                            tp.syn_angle_gather(0.1, 0.25, lyr_times, thickness,
+                                              np.array([]), np.array([]),
+                                              np.array([]), np.array([]),
+                                              np.array([]), syn_zoep_o,
+                                              rc_zoep_o, t, excursion)
+                            ax1.set_title('Oil Case')
+                        except Exception as e:
+                            st.error(f"Oil AVO Gather Error: {str(e)}")
+                            st.text(traceback.format_exc())
                     
                     # AVO Curves
                     ax2 = fig.add_subplot(gs[1])
@@ -453,13 +465,11 @@ if uploaded_file is not None:
                         rc_zoep_g.append([rc_1[0, 0], rc_2[0, 0]])
                     
                     # Generate synthetic gathers for gas
-                    syn_zoep_g = []
+                    syn_zoep_g = np.zeros((nangles, len(t_samp)))
                     for angle in range(0, nangles):
                         rc = tp.mod_digitize(rc_zoep_g[angle], lyr_times[angle], t_samp)
-                        s = tp.syn_seis(ref_coef=rc, wav_amp=wlt_amp)
-                        syn_zoep_g.append(s)
+                        syn_zoep_g[angle] = tp.syn_seis(ref_coef=rc, wav_amp=wlt_amp)
                     
-                    syn_zoep_g = np.array(syn_zoep_g)
                     rc_zoep_g = np.array(rc_zoep_g)
                     
                     # Create figure for gas case
@@ -468,9 +478,17 @@ if uploaded_file is not None:
                     
                     # AVO Gather
                     ax1 = fig.add_subplot(gs[0])
-                    tp.syn_angle_gather(0.1, 0.25, lyr_times, thickness, [], [], 
-                                      [], [], [], syn_zoep_g, rc_zoep_g, t, excursion)
-                    ax1.set_title('Gas Case')
+                    with st.spinner('Generating Gas AVO Gather...'):
+                        try:
+                            tp.syn_angle_gather(0.1, 0.25, lyr_times, thickness,
+                                              np.array([]), np.array([]),
+                                              np.array([]), np.array([]),
+                                              np.array([]), syn_zoep_g,
+                                              rc_zoep_g, t, excursion)
+                            ax1.set_title('Gas Case')
+                        except Exception as e:
+                            st.error(f"Gas AVO Gather Error: {str(e)}")
+                            st.text(traceback.format_exc())
                     
                     # AVO Curves
                     ax2 = fig.add_subplot(gs[1])
@@ -494,11 +512,11 @@ if uploaded_file is not None:
                     st.pyplot(fig)
 
             except Exception as e:
-                st.error(f"An error occurred in Oil & Gas Cases AVO Modeling: {str(e)}")
+                st.error(f"Oil & Gas Cases AVO Modeling Error: {str(e)}")
                 st.text(traceback.format_exc())
 
     except Exception as e:
-        st.error(f"An error occurred during data processing: {str(e)}")
+        st.error(f"Data Processing Error: {str(e)}")
         st.text(traceback.format_exc())
 else:
     st.info("Please upload a well log CSV file to begin analysis.")
