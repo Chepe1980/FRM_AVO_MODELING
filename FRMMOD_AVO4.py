@@ -300,10 +300,22 @@ if uploaded_file is not None:
                     vs_u = np.nan_to_num(vs_u, nan=np.nanmean(vs_u))
                     rho_u = np.nan_to_num(rho_u, nan=np.nanmean(rho_u))
                 
-                # Create numpy arrays for the three layers
-                vp_data = np.array([np.mean(vp_u), np.mean(vp_u)*0.95, np.mean(vp_u)*1.05])
-                vs_data = np.array([np.mean(vs_u), np.mean(vs_u)*0.95, np.mean(vs_u)*1.05])
-                rho_data = np.array([np.mean(rho_u), np.mean(rho_u)*0.95, np.mean(rho_u)*1.05])
+                # Create numpy arrays for the three layers (FIXED: Explicit float conversion)
+                vp_data = np.array([
+                    float(np.nanmean(vp_u)),
+                    float(np.nanmean(vp_u)) * 0.95,
+                    float(np.nanmean(vp_u)) * 1.05
+                ])
+                vs_data = np.array([
+                    float(np.nanmean(vs_u)),
+                    float(np.nanmean(vs_u)) * 0.95,
+                    float(np.nanmean(vs_u)) * 1.05
+                ])
+                rho_data = np.array([
+                    float(np.nanmean(rho_u)),
+                    float(np.nanmean(rho_u)) * 0.95,
+                    float(np.nanmean(rho_u)) * 1.05
+                ])
                 
                 # Generate AVO response
                 nangles = tp.n_angles(0, max_angle)
@@ -382,10 +394,10 @@ if uploaded_file is not None:
                 with col1:
                     st.subheader("Oil Case")
                     
-                    # Get average properties for oil case
-                    vp_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot)], 'VP_FRMO'.values
-                    vs_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot)], 'VS_FRMO'.values
-                    rho_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot)], 'RHO_FRMO'.values
+                    # Get average properties for oil case (FIXED: Removed stray "]")
+                    vp_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VP_FRMO'].values
+                    vs_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VS_FRMO'].values
+                    rho_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'RHO_FRMO'].values
                     
                     # Convert to numpy arrays and handle potential NaN values
                     vp_u = np.array(vp_u, dtype=float)
@@ -398,9 +410,21 @@ if uploaded_file is not None:
                         rho_u = np.nan_to_num(rho_u, nan=np.nanmean(rho_u))
                     
                     # Create numpy arrays for the three layers
-                    vp_data = np.array([np.mean(vp_u), np.mean(vp_u)*0.95, np.mean(vp_u)*1.05])
-                    vs_data = np.array([np.mean(vs_u), np.mean(vs_u)*0.95, np.mean(vs_u)*1.05])
-                    rho_data = np.array([np.mean(rho_u), np.mean(rho_u)*0.95, np.mean(rho_u)*1.05])
+                    vp_data = np.array([
+                        float(np.nanmean(vp_u)),
+                        float(np.nanmean(vp_u)) * 0.95,
+                        float(np.nanmean(vp_u)) * 1.05
+                    ])
+                    vs_data = np.array([
+                        float(np.nanmean(vs_u)),
+                        float(np.nanmean(vs_u)) * 0.95,
+                        float(np.nanmean(vs_u)) * 1.05
+                    ])
+                    rho_data = np.array([
+                        float(np.nanmean(rho_u)),
+                        float(np.nanmean(rho_u)) * 0.95,
+                        float(np.nanmean(rho_u)) * 1.05
+                    ])
                     
                     # Generate AVO response for oil
                     rc_zoep_o = []
@@ -469,9 +493,21 @@ if uploaded_file is not None:
                         rho_u = np.nan_to_num(rho_u, nan=np.nanmean(rho_u))
                     
                     # Create numpy arrays for the three layers
-                    vp_data = np.array([np.mean(vp_u), np.mean(vp_u)*0.95, np.mean(vp_u)*1.05])
-                    vs_data = np.array([np.mean(vs_u), np.mean(vs_u)*0.95, np.mean(vs_u)*1.05])
-                    rho_data = np.array([np.mean(rho_u), np.mean(rho_u)*0.95, np.mean(rho_u)*1.05])
+                    vp_data = np.array([
+                        float(np.nanmean(vp_u)),
+                        float(np.nanmean(vp_u)) * 0.95,
+                        float(np.nanmean(vp_u)) * 1.05
+                    ])
+                    vs_data = np.array([
+                        float(np.nanmean(vs_u)),
+                        float(np.nanmean(vs_u)) * 0.95,
+                        float(np.nanmean(vs_u)) * 1.05
+                    ])
+                    rho_data = np.array([
+                        float(np.nanmean(rho_u)),
+                        float(np.nanmean(rho_u)) * 0.95,
+                        float(np.nanmean(rho_u)) * 1.05
+                    ])
                     
                     # Generate AVO response for gas
                     rc_zoep_g = []
