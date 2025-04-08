@@ -166,18 +166,18 @@ if uploaded_file:
             rho = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'RHO_FRMB'].values
         
         # Create two layers with 5% contrast
-        vp_mean = np.nanmean(vp)
-        vs_mean = np.nanmean(vs)
-        rho_mean = np.nanmean(rho)
+           vp_mean = np.nanmean(vp)
+           vs_mean = np.nanmean(vs)
+           rho_mean = np.nanmean(rho)
         
-        vp_data = np.array([vp_mean*1.05, vp_mean*0.95], dtype=np.float64).reshape(-1, 1)
-        vs_data = np.array([vs_mean*1.05, vs_mean*0.95], dtype=np.float64).reshape(-1, 1)
-        rho_data = np.array([rho_mean*1.05, rho_mean*0.95], dtype=np.float64).reshape(-1, 1)
+           vp_data = np.array([vp_mean*1.05, vp_mean*0.95], dtype=np.float64).reshape(-1, 1)
+           vs_data = np.array([vs_mean*1.05, vs_mean*0.95], dtype=np.float64).reshape(-1, 1)
+           rho_data = np.array([rho_mean*1.05, rho_mean*0.95], dtype=np.float64).reshape(-1, 1)
 
         # AVO calculation
-        nangles = tp.n_angles(0, max_angle)
-        rc_zoep = []
-        angles = np.linspace(0, max_angle, nangles)
+           nangles = tp.n_angles(0, max_angle)
+           rc_zoep = []
+           angles = np.linspace(0, max_angle, nangles)
         
         for angle in angles:
             try:
