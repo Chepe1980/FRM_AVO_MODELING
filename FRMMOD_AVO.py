@@ -282,7 +282,7 @@ if uploaded_file is not None:
             st.pyplot(fig)
 
         with tab3:
-    st.header("Brine Case AVO Modeling")
+            st.header("Brine Case AVO Modeling")
     
     # Get average properties for the selected zone
     vp_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VP_FRMB'].values
