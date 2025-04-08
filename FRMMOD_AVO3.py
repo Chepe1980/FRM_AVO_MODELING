@@ -207,7 +207,8 @@ if uploaded_file is not None:
             ll = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot)]
             
             # Create cluster for facies display
-            cluster = np.repeat(np.expand_dims(ll['LFC_B'].values, 1), 100, 1)
+            #cluster = np.repeat(np.expand_dims(ll['LFC_B'].values, 1), 100, 1)
+            cluster = np.repeat(np.expand_dims(ll['LFC_B'].values, axis=1), 100, axis=0)
             ccc = ['#B3B3B3', 'blue', 'green', 'red', '#996633']
             cmap_facies = colors.ListedColormap(ccc[0:len(ccc)], 'indexed')
 
