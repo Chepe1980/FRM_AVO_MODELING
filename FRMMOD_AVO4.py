@@ -207,7 +207,7 @@ if uploaded_file is not None:
     
     # Create cluster for facies display - FIXED VERSION
      cluster_data = np.expand_dims(ll['LFC_B'].values, axis=1)
-    cluster = np.repeat(cluster_data, 100, axis=1)
+     cluster = np.repeat(cluster_data, 100, axis=1)
     
     ccc = ['#B3B3B3', 'blue', 'green', 'red', '#996633']
     cmap_facies = colors.ListedColormap(ccc[0:len(ccc)], 'indexed')
