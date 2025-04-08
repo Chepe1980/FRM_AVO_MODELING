@@ -359,13 +359,12 @@ if uploaded_file is not None:
     plt.tight_layout()
     st.pyplot(fig)
 
+    except Exception as e:
+        st.error(f"An error occurred in Brine Case AVO Modeling: {str(e)}")    
 
-
-
-
-            
         with tab4:
     st.header("Oil & Gas Cases AVO Modeling")
+ try:
     
     col1, col2 = st.columns(2)
     
