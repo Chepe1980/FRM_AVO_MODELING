@@ -282,86 +282,87 @@ if uploaded_file is not None:
             st.pyplot(fig)
 
         with tab3:
-                st.header("Brine Case AVO Modeling")
+         
+    st.header("Brine Case AVO Modeling")
     
-    try:  # <-- Ensure this is aligned under `with tab3:`
+    try:
         # Get average properties for the selected zone
         vp_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VP_FRMB'].values
         vs_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VS_FRMB'].values
         rho_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'RHO_FRMB'].values
         
-    
-    vp_data = [vp_u.mean(), vp_u.mean()*0.95, vp_u.mean()*1.05]  # Simple 3-layer model
-    vs_data = [vs_u.mean(), vs_u.mean()*0.95, vs_u.mean()*1.05]
-    rho_data = [rho_u.mean(), rho_u.mean()*0.95, rho_u.mean()*1.05]
-    
-    # Generate AVO response
-    nangles = tp.n_angles(0, max_angle)
-    rc_zoep = []
-    theta1 = []
-    
-    for angle in range(0, nangles):
-        theta1_samp, rc_1, rc_2 = tp.calc_theta_rc(theta1_min=0, theta1_step=1, 
-                                                  vp=vp_data, vs=vs_data, rho=rho_data, ang=angle)
-        theta1.append(theta1_samp)
-        rc_zoep.append([rc_1[0, 0], rc_2[0, 0]])
-    
-    # Generate wavelet
-    wlt_time, wlt_amp = wavelet.ricker(sample_rate=sample_rate/1000, length=wlt_length/1000, c_freq=freq)
-    t_samp = tp.time_samples(t_min=0, t_max=0.5)
-    
-    # Generate synthetic gathers
-    syn_zoep = []
-    lyr_times = []
-    
-    for angle in range(0, nangles):
-        z_int = tp.int_depth(h_int=[500.0], thickness=10)
-        t_int = tp.calc_times(z_int, vp_data)
-        lyr_times.append(t_int)
-        rc = tp.mod_digitize(rc_zoep[angle], t_int, t_samp)
-        s = tp.syn_seis(ref_coef=rc, wav_amp=wlt_amp)
-        syn_zoep.append(s)
-    
-    syn_zoep = np.array(syn_zoep)
-    rc_zoep = np.array(rc_zoep)
-    t = np.array(t_samp)
-    lyr_times = np.array(lyr_times)
-    
-    # Create figure with 3 panels
-    fig = plt.figure(figsize=(18, 6))
-    gs = fig.add_gridspec(1, 3, width_ratios=[1, 1, 0.5])
-    
-    # AVO Gather
-    ax1 = fig.add_subplot(gs[0])
-    tp.syn_angle_gather(0.1, 0.25, lyr_times, thickness, [], [], 
-                       [], [], [], syn_zoep, rc_zoep, t, excursion)
-    ax1.set_title(f'Brine Case - {freq}Hz Wavelet')
-    
-    # AVO Curves
-    ax2 = fig.add_subplot(gs[1])
-    angles = np.arange(0, max_angle+1)
-    ax2.plot(angles, rc_zoep[:, 0], 'b-', label='Upper Interface')
-    ax2.plot(angles, rc_zoep[:, 1], 'r-', label='Lower Interface')
-    ax2.set_xlabel('Angle (degrees)')
-    ax2.set_ylabel('Reflection Coefficient')
-    ax2.set_title('AVO Response')
-    ax2.grid()
-    ax2.legend()
-    
-    # Wavelet Plot
-    ax3 = fig.add_subplot(gs[2])
-    ax3.plot(wlt_time*1000, wlt_amp, 'k-', linewidth=2)
-    ax3.set_title(f'Wavelet ({freq}Hz)')
-    ax3.set_xlabel('Time (ms)')
-    ax3.set_ylabel('Amplitude')
-    ax3.grid()
-    
-    plt.tight_layout()
-    st.pyplot(fig)
+        vp_data = [vp_u.mean(), vp_u.mean()*0.95, vp_u.mean()*1.05]
+        vs_data = [vs_u.mean(), vs_u.mean()*0.95, vs_u.mean()*1.05]
+        rho_data = [rho_u.mean(), rho_u.mean()*0.95, rho_u.mean()*1.05]
+        
+        # Generate AVO response
+        nangles = tp.n_angles(0, max_angle)
+        rc_zoep = []
+        theta1 = []
+        
+        for angle in range(0, nangles):
+            theta1_samp, rc_1, rc_2 = tp.calc_theta_rc(theta1_min=0, theta1_step=1, 
+                                                      vp=vp_data, vs=vs_data, rho=rho_data, ang=angle)
+            theta1.append(theta1_samp)
+            rc_zoep.append([rc_1[0, 0], rc_2[0, 0]])
+        
+        # Generate wavelet
+        wlt_time, wlt_amp = wavelet.ricker(sample_rate=sample_rate/1000, length=wlt_length/1000, c_freq=freq)
+        t_samp = tp.time_samples(t_min=0, t_max=0.5)
+        
+        # Generate synthetic gathers
+        syn_zoep = []
+        lyr_times = []
+        
+        for angle in range(0, nangles):
+            z_int = tp.int_depth(h_int=[500.0], thickness=10)
+            t_int = tp.calc_times(z_int, vp_data)
+            lyr_times.append(t_int)
+            rc = tp.mod_digitize(rc_zoep[angle], t_int, t_samp)
+            s = tp.syn_seis(ref_coef=rc, wav_amp=wlt_amp)
+            syn_zoep.append(s)
+        
+        syn_zoep = np.array(syn_zoep)
+        rc_zoep = np.array(rc_zoep)
+        t = np.array(t_samp)
+        lyr_times = np.array(lyr_times)
+        
+        # Create figure with 3 panels
+        fig = plt.figure(figsize=(18, 6))
+        gs = fig.add_gridspec(1, 3, width_ratios=[1, 1, 0.5])
+        
+        # AVO Gather
+        ax1 = fig.add_subplot(gs[0])
+        tp.syn_angle_gather(0.1, 0.25, lyr_times, thickness, [], [], 
+                           [], [], [], syn_zoep, rc_zoep, t, excursion)
+        ax1.set_title(f'Brine Case - {freq}Hz Wavelet')
+        
+        # AVO Curves
+        ax2 = fig.add_subplot(gs[1])
+        angles = np.arange(0, max_angle+1)
+        ax2.plot(angles, rc_zoep[:, 0], 'b-', label='Upper Interface')
+        ax2.plot(angles, rc_zoep[:, 1], 'r-', label='Lower Interface')
+        ax2.set_xlabel('Angle (degrees)')
+        ax2.set_ylabel('Reflection Coefficient')
+        ax2.set_title('AVO Response')
+        ax2.grid()
+        ax2.legend()
+        
+        # Wavelet Plot
+        ax3 = fig.add_subplot(gs[2])
+        ax3.plot(wlt_time*1000, wlt_amp, 'k-', linewidth=2)
+        ax3.set_title(f'Wavelet ({freq}Hz)')
+        ax3.set_xlabel('Time (ms)')
+        ax3.set_ylabel('Amplitude')
+        ax3.grid()
+        
+        plt.tight_layout()
+        st.pyplot(fig)
 
     except Exception as e:
-        st.error(f"An error occurred in Brine Case AVO Modeling: {str(e)}")    
+        st.error(f"An error occurred in Brine Case AVO Modeling: {str(e)}")
 
+                
         with tab4:
     st.header("Oil & Gas Cases AVO Modeling")
  try:
