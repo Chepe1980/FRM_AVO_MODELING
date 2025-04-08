@@ -280,7 +280,8 @@ if uploaded_file is not None:
             
             plt.tight_layout()
             st.pyplot(fig)
-
+except:
+    pass
         with tab3:
             st.header("Brine Case AVO Modeling")
     
