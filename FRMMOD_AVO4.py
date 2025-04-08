@@ -7,6 +7,10 @@ from pyavo.seismodel import tuning_prestack as tp
 from pyavo.seismodel import wavelet
 import traceback
 
+from pyavo.seismodel import tuning_wedge as tw
+from pyavo.seismodel import wavelet
+import numpy as np
+
 # Set page config
 st.set_page_config(layout="wide", page_title="Seismic Fluid Replacement Modeling")
 
