@@ -1,0 +1,8 @@
+streamlit
+pyavo
+numpy
+pandas
+matplotlib
+
+
+
