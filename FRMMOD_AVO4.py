@@ -200,7 +200,7 @@ if uploaded_file is not None:
         tab1, tab2, tab3, tab4 = st.tabs(["Well Logs", "Crossplots", "Brine Case", "Oil & Gas Cases"])
 
         with tab1:
-    st.header("Well Log Visualization")
+            st.header("Well Log Visualization")
     
     # Filter logs for selected depth range
     ll = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot)]
