@@ -206,7 +206,7 @@ if uploaded_file is not None:
             ll = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot)]
     
     # Create cluster for facies display - FIXED VERSION
-    cluster_data = np.expand_dims(ll['LFC_B'].values, axis=1)
+     cluster_data = np.expand_dims(ll['LFC_B'].values, axis=1)
     cluster = np.repeat(cluster_data, 100, axis=1)
     
     ccc = ['#B3B3B3', 'blue', 'green', 'red', '#996633']
