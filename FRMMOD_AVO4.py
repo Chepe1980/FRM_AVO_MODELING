@@ -157,43 +157,106 @@ if uploaded_file:
                             c=logs[f'LFC_{fluid}'], cmap=cmap, vmin=0, vmax=4)
             st.pyplot(fig)
 
-        with tab3:
-            st.header("Brine Case AVO Modeling")
-            try:
-                # Get properties for selected zone
-                vp = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VP_FRMB'].values
-                vs = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VS_FRMB'].values
-                rho = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'RHO_FRMB'].values
-                
-                # Create two layers with 5% contrast
-                vp_data = np.array([np.nanmean(vp)*1.05, np.nanmean(vp)*0.95]).reshape(-1, 1)
-                vs_data = np.array([np.nanmean(vs)*1.05, np.nanmean(vs)*0.95]).reshape(-1, 1) 
-                rho_data = np.array([np.nanmean(rho)*1.05, np.nanmean(rho)*0.95]).reshape(-1, 1)
+with tab3:
+    st.header("Brine Case AVO Modeling")
+    try:
+        # Get properties for selected zone
+        vp = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VP_FRMB'].values
+        vs = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VS_FRMB'].values
+        rho = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'RHO_FRMB'].values
+        
+        # Create two layers with 5% contrast
+        vp_mean = np.nanmean(vp)
+        vs_mean = np.nanmean(vs)
+        rho_mean = np.nanmean(rho)
+        
+        vp_data = np.array([vp_mean*1.05, vp_mean*0.95], dtype=np.float64).reshape(-1, 1)
+        vs_data = np.array([vs_mean*1.05, vs_mean*0.95], dtype=np.float64).reshape(-1, 1)
+        rho_data = np.array([rho_mean*1.05, rho_mean*0.95], dtype=np.float64).reshape(-1, 1)
 
-                # AVO calculation
-                nangles = tp.n_angles(0, max_angle)
-                rc_zoep = []
-                for angle in range(nangles):
-                    _, rc1, rc2 = tp.calc_theta_rc(0, 1, vp_data, vs_data, rho_data, angle)
-                    if rc1.shape[0] > 1 and rc2.shape[0] > 1:
-                        rc_zoep.append([float(rc1[1,0]), float(rc2[1,0])])
-                
-                # Generate synthetic
-                wlt_time, wlt_amp = wavelet.ricker(sample_rate/1000, wlt_length/1000, freq)
-                t_samp = tp.time_samples(0, 0.5)
-                
-                syn_zoep = []
-                for angle in range(nangles):
-                    z_int = tp.int_depth([500.0], 10)
-                    t_int = tp.calc_times(z_int, vp_data)
-                    rc = tp.mod_digitize(rc_zoep[angle], t_int, t_samp)
-                    syn_zoep.append(tp.syn_seis(rc, wlt_amp))
-                
-                # Plotting code...
-                st.pyplot(fig)
-                
+        # AVO calculation
+        nangles = tp.n_angles(0, max_angle)
+        rc_zoep = []
+        angles = np.linspace(0, max_angle, nangles)
+        
+        for angle in angles:
+            try:
+                theta1_samp, rc1, rc2 = tp.calc_theta_rc(
+                    theta1_min=0,
+                    theta1_step=1,
+                    vp=vp_data,
+                    vs=vs_data,
+                    rho=rho_data,
+                    ang=angle
+                )
+                # Only take the interface between our two layers
+                if rc1.shape[0] >= 2 and rc2.shape[0] >= 2:
+                    rc_zoep.append([float(rc1[1, 0]), float(rc2[1, 0])])
+                else:
+                    st.warning(f"Unexpected RC shape at angle {angle}: {rc1.shape}, {rc2.shape}")
+                    continue
             except Exception as e:
-                st.error(f"AVO Modeling Error: {str(e)}")
+                st.error(f"Error at angle {angle}: {str(e)}")
+                continue
+
+        if not rc_zoep:
+            st.error("No valid AVO responses calculated")
+            st.stop()
+
+        # Generate wavelet
+        wlt_time, wlt_amp = wavelet.ricker(
+            sample_rate=sample_rate/1000,
+            length=wlt_length/1000,
+            c_freq=freq
+        )
+        
+        # Generate synthetic gathers
+        syn_zoep = []
+        t_samp = tp.time_samples(t_min=0, t_max=0.5)
+        
+        for i, angle in enumerate(angles):
+            try:
+                z_int = tp.int_depth(h_int=[500.0], thickness=10)
+                t_int = tp.calc_times(z_int, vp_data)
+                rc = tp.mod_digitize(rc_zoep[i], t_int, t_samp)
+                syn_zoep.append(tp.syn_seis(ref_coef=rc, wav_amp=wlt_amp))
+            except Exception as e:
+                st.error(f"Error generating synthetic for angle {angle}: {str(e)}")
+                continue
+
+        # Create figure
+        fig = plt.figure(figsize=(18, 6))
+        gs = fig.add_gridspec(1, 3, width_ratios=[1, 1, 0.5])
+        
+        # AVO Gather
+        ax1 = fig.add_subplot(gs[0])
+        tp.syn_angle_gather(0.1, 0.25, [t_int]*len(angles), thickness, 
+                           [], [], [], [], [], np.array(syn_zoep), 
+                           np.array(rc_zoep), t_samp, excursion)
+        ax1.set_title(f'Brine Case - {freq}Hz Wavelet')
+        
+        # AVO Curves
+        ax2 = fig.add_subplot(gs[1])
+        ax2.plot(angles, [rc[0] for rc in rc_zoep], 'b-', label='Upper Interface')
+        ax2.plot(angles, [rc[1] for rc in rc_zoep], 'r-', label='Lower Interface')
+        ax2.set_xlabel('Angle (degrees)')
+        ax2.set_ylabel('Reflection Coefficient')
+        ax2.legend()
+        ax2.grid()
+        
+        # Wavelet Plot
+        ax3 = fig.add_subplot(gs[2])
+        ax3.plot(wlt_time*1000, wlt_amp, 'k-')
+        ax3.set_title(f'Wavelet ({freq}Hz)')
+        ax3.set_xlabel('Time (ms)')
+        ax3.grid()
+
+        plt.tight_layout()
+        st.pyplot(fig)
+
+    except Exception as e:
+        st.error(f"AVO Modeling Error: {str(e)}")
+        st.error("Please check your input parameters and data quality")
 
         with tab4:
             st.header("Oil & Gas Cases")
