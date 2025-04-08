@@ -157,7 +157,7 @@ if uploaded_file:
                             c=logs[f'LFC_{fluid}'], cmap=cmap, vmin=0, vmax=4)
             st.pyplot(fig)
 
-with tab3:
+        with tab3:
     st.header("Brine Case AVO Modeling")
     try:
         # Get properties for selected zone
