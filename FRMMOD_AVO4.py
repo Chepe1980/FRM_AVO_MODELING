@@ -383,9 +383,9 @@ if uploaded_file is not None:
                     st.subheader("Oil Case")
                     
                     # Get average properties for oil case
-                    vp_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VP_FRMO'].values
-                    vs_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VS_FRMO'].values
-                    rho_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'RHO_FRMO'].values
+                    vp_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot)], 'VP_FRMO'].values
+                    vs_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot)], 'VS_FRMO'].values
+                    rho_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot)], 'RHO_FRMO'].values
                     
                     # Convert to numpy arrays and handle potential NaN values
                     vp_u = np.array(vp_u, dtype=float)
