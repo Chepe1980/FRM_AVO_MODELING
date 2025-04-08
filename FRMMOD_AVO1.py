@@ -201,8 +201,8 @@ if uploaded_file is not None:
         vpg, vsg, rhog, kg = frm(logs[vp_col], logs[vs_col], logs[rho_col], rho_fl, k_fl, rho_g, k_g, k0, logs[phi_col])
 
         # Lithology classification
-        brine_sand = ((logs[vsh_col] <= sand_cutoff) & (logs[sw_col] >= 0.65)
-        oil_sand = ((logs[vsh_col] <= sand_cutoff) & (logs[sw_col] < 0.65)
+        brine_sand = ((logs[vsh_col] <= sand_cutoff) & (logs[sw_col] >= 0.65))
+        oil_sand = ((logs[vsh_col] <= sand_cutoff) & (logs[sw_col] < 0.65))
         shale_flag = (logs[vsh_col] > sand_cutoff)
 
         # Add results to logs
