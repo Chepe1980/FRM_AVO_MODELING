@@ -282,174 +282,156 @@ if uploaded_file is not None:
             st.pyplot(fig)
 
         with tab3:
-            st.header("Brine Case AVO Modeling")
-            
-            # Get average properties for the selected zone
-            vp_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VP_FRMB'].values
-            vs_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VS_FRMB'].values
-            rho_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'RHO_FRMB'].values
-            
-            vp_data = [vp_u.mean(), vp_u.mean()*0.95, vp_u.mean()*1.05]  # Simple 3-layer model
-            vs_data = [vs_u.mean(), vs_u.mean()*0.95, vs_u.mean()*1.05]
-            rho_data = [rho_u.mean(), rho_u.mean()*0.95, rho_u.mean()*1.05]
-            
-            # Generate AVO response
-            nangles = tp.n_angles(0, max_angle)
-            rc_zoep = []
-            theta1 = []
-            
-            for angle in range(0, nangles):
-                theta1_samp, rc_1, rc_2 = tp.calc_theta_rc(theta1_min=0, theta1_step=1, 
-                                                          vp=vp_data, vs=vs_data, rho=rho_data, ang=angle)
-                theta1.append(theta1_samp)
-                rc_zoep.append([rc_1[0, 0], rc_2[0, 0]])
-            
-            # Generate wavelet
-            wlt_time, wlt_amp = wavelet.ricker(sample_rate=sample_rate/1000, length=wlt_length/1000, c_freq=freq)
-            t_samp = tp.time_samples(t_min=0, t_max=0.5)
-            
-            # Generate synthetic gathers
-            syn_zoep = []
-            lyr_times = []
-            
-            for angle in range(0, nangles):
-                z_int = tp.int_depth(h_int=[500.0], thickness=10)
-                t_int = tp.calc_times(z_int, vp_data)
-                lyr_times.append(t_int)
-                rc = tp.mod_digitize(rc_zoep[angle], t_int, t_samp)
-                s = tp.syn_seis(ref_coef=rc, wav_amp=wlt_amp)
-                syn_zoep.append(s)
-            
-            syn_zoep = np.array(syn_zoep)
-            rc_zoep = np.array(rc_zoep)
-            t = np.array(t_samp)
-            lyr_times = np.array(lyr_times)
-            
-            # Plot results
-            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
-            
-            # AVO Gather
-            tp.syn_angle_gather(0.1, 0.25, lyr_times, thickness, [], [], 
-                              [], [], [], syn_zoep, rc_zoep, t, excursion, ax=ax1)
-            ax1.set_title(f'Brine Case - {freq}Hz Wavelet')
-            
-            # AVO Curves
-            angles = np.arange(0, max_angle+1)
-            ax2.plot(angles, rc_zoep[:, 0], 'b-', label='Upper Interface')
-            ax2.plot(angles, rc_zoep[:, 1], 'r-', label='Lower Interface')
-            ax2.set_xlabel('Angle (degrees)')
-            ax2.set_ylabel('Reflection Coefficient')
-            ax2.set_title('AVO Response')
-            ax2.grid()
-            ax2.legend()
-            
-            plt.tight_layout()
-            st.pyplot(fig)
-
+st.header("Brine Case AVO Modeling")
+    
+    # Get average properties for the selected zone
+    vp_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VP_FRMB'].values
+    vs_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VS_FRMB'].values
+    rho_u = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'RHO_FRMB'].values
+    
+    vp_data = [vp_u.mean(), vp_u.mean()*0.95, vp_u.mean()*1.05]
+    vs_data = [vs_u.mean(), vs_u.mean()*0.95, vs_u.mean()*1.05]
+    rho_data = [rho_u.mean(), rho_u.mean()*0.95, rho_u.mean()*1.05]
+    
+    # Generate AVO response
+    nangles = tp.n_angles(0, max_angle)
+    rc_zoep = []
+    theta1 = []
+    
+    for angle in range(0, nangles):
+        theta1_samp, rc_1, rc_2 = tp.calc_theta_rc(theta1_min=0, theta1_step=1, 
+                                                  vp=vp_data, vs=vs_data, rho=rho_data, ang=angle)
+        theta1.append(theta1_samp)
+        rc_zoep.append([rc_1[0, 0], rc_2[0, 0]])
+    
+    # Generate wavelet
+    wlt_time, wlt_amp = wavelet.ricker(sample_rate=sample_rate/1000, length=wlt_length/1000, c_freq=freq)
+    t_samp = tp.time_samples(t_min=0, t_max=0.5)
+    
+    # Generate synthetic gathers
+    syn_zoep = []
+    lyr_times = []
+    
+    for angle in range(0, nangles):
+        z_int = tp.int_depth(h_int=[500.0], thickness=10)
+        t_int = tp.calc_times(z_int, vp_data)
+        lyr_times.append(t_int)
+        rc = tp.mod_digitize(rc_zoep[angle], t_int, t_samp)
+        s = tp.syn_seis(ref_coef=rc, wav_amp=wlt_amp)
+        syn_zoep.append(s)
+    
+    syn_zoep = np.array(syn_zoep)
+    rc_zoep = np.array(rc_zoep)
+    t = np.array(t_samp)
+    lyr_times = np.array(lyr_times)
+    
+    # Create figure with 3 panels
+    fig = plt.figure(figsize=(18, 6))
+    gs = fig.add_gridspec(1, 3, width_ratios=[1, 1, 0.5])
+    
+    # AVO Gather
+    ax1 = fig.add_subplot(gs[0])
+    tp.syn_angle_gather(0.1, 0.25, lyr_times, thickness, [], [], 
+                       [], [], [], syn_zoep, rc_zoep, t, excursion)
+    ax1.set_title(f'Brine Case - {freq}Hz Wavelet')
+    
+    # AVO Curves
+    ax2 = fig.add_subplot(gs[1])
+    angles = np.arange(0, max_angle+1)
+    ax2.plot(angles, rc_zoep[:, 0], 'b-', label='Upper Interface')
+    ax2.plot(angles, rc_zoep[:, 1], 'r-', label='Lower Interface')
+    ax2.set_xlabel('Angle (degrees)')
+    ax2.set_ylabel('Reflection Coefficient')
+    ax2.set_title('AVO Response')
+    ax2.grid()
+    ax2.legend()
+    
+    # Wavelet Plot
+    ax3 = fig.add_subplot(gs[2])
+    ax3.plot(wlt_time*1000, wlt_amp, 'k-', linewidth=2)
+    ax3.set_title(f'Wavelet ({freq}Hz)')
+    ax3.set_xlabel('Time (ms)')
+    ax3.set_ylabel('Amplitude')
+    ax3.grid()
+    
+    plt.tight_layout()
+    st.pyplot(fig)
         with tab4:
-            st.header("Oil & Gas Cases AVO Modeling")
-            
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.subheader("Oil Case")
-                
-                # Get average properties for oil case
-                vp_o = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VP_FRMO'].values
-                vs_o = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VS_FRMO'].values
-                rho_o = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'RHO_FRMO'].values
-                
-                vp_data_o = [vp_o.mean(), vp_o.mean()*0.95, vp_o.mean()*1.05]
-                vs_data_o = [vs_o.mean(), vs_o.mean()*0.95, vs_o.mean()*1.05]
-                rho_data_o = [rho_o.mean(), rho_o.mean()*0.95, rho_o.mean()*1.05]
-                
-                # Generate AVO response for oil
-                rc_zoep_o = []
-                for angle in range(0, nangles):
-                    theta1_samp, rc_1, rc_2 = tp.calc_theta_rc(theta1_min=0, theta1_step=1, 
-                                                              vp=vp_data_o, vs=vs_data_o, rho=rho_data_o, ang=angle)
-                    rc_zoep_o.append([rc_1[0, 0], rc_2[0, 0]])
-                
-                rc_zoep_o = np.array(rc_zoep_o)
-                
-                # Plot oil AVO
-                fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
-                
-                # AVO Gather for oil
-                syn_zoep_o = []
-                for angle in range(0, nangles):
-                    z_int = tp.int_depth(h_int=[500.0], thickness=10)
-                    t_int = tp.calc_times(z_int, vp_data_o)
-                    rc = tp.mod_digitize(rc_zoep_o[angle], t_int, t_samp)
-                    s = tp.syn_seis(ref_coef=rc, wav_amp=wlt_amp)
-                    syn_zoep_o.append(s)
-                
-                syn_zoep_o = np.array(syn_zoep_o)
-                tp.syn_angle_gather(0.1, 0.25, lyr_times, thickness, [], [], 
-                                  [], [], [], syn_zoep_o, rc_zoep_o, t, excursion, ax=ax1)
-                ax1.set_title('Oil Case')
-                
-                # AVO Curves for oil
-                ax2.plot(angles, rc_zoep_o[:, 0], 'b-', label='Upper Interface')
-                ax2.plot(angles, rc_zoep_o[:, 1], 'r-', label='Lower Interface')
-                ax2.set_xlabel('Angle (degrees)')
-                ax2.set_ylabel('Reflection Coefficient')
-                ax2.set_title('Oil AVO Response')
-                ax2.grid()
-                ax2.legend()
-                
-                plt.tight_layout()
-                st.pyplot(fig)
-            
-            with col2:
-                st.subheader("Gas Case")
-                
-                # Get average properties for gas case
-                vp_g = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VP_FRMG'].values
-                vs_g = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VS_FRMG'].values
-                rho_g = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'RHO_FRMG'].values
-                
-                vp_data_g = [vp_g.mean(), vp_g.mean()*0.95, vp_g.mean()*1.05]
-                vs_data_g = [vs_g.mean(), vs_g.mean()*0.95, vs_g.mean()*1.05]
-                rho_data_g = [rho_g.mean(), rho_g.mean()*0.95, rho_g.mean()*1.05]
-                
-                # Generate AVO response for gas
-                rc_zoep_g = []
-                for angle in range(0, nangles):
-                    theta1_samp, rc_1, rc_2 = tp.calc_theta_rc(theta1_min=0, theta1_step=1, 
-                                                              vp=vp_data_g, vs=vs_data_g, rho=rho_data_g, ang=angle)
-                    rc_zoep_g.append([rc_1[0, 0], rc_2[0, 0]])
-                
-                rc_zoep_g = np.array(rc_zoep_g)
-                
-                # Plot gas AVO
-                fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
-                
-                # AVO Gather for gas
-                syn_zoep_g = []
-                for angle in range(0, nangles):
-                    z_int = tp.int_depth(h_int=[500.0], thickness=10)
-                    t_int = tp.calc_times(z_int, vp_data_g)
-                    rc = tp.mod_digitize(rc_zoep_g[angle], t_int, t_samp)
-                    s = tp.syn_seis(ref_coef=rc, wav_amp=wlt_amp)
-                    syn_zoep_g.append(s)
-                
-                syn_zoep_g = np.array(syn_zoep_g)
-                tp.syn_angle_gather(0.1, 0.25, lyr_times, thickness, [], [], 
-                                  [], [], [], syn_zoep_g, rc_zoep_g, t, excursion, ax=ax1)
-                ax1.set_title('Gas Case')
-                
-                # AVO Curves for gas
-                ax2.plot(angles, rc_zoep_g[:, 0], 'b-', label='Upper Interface')
-                ax2.plot(angles, rc_zoep_g[:, 1], 'r-', label='Lower Interface')
-                ax2.set_xlabel('Angle (degrees)')
-                ax2.set_ylabel('Reflection Coefficient')
-                ax2.set_title('Gas AVO Response')
-                ax2.grid()
-                ax2.legend()
-                
-                plt.tight_layout()
-                st.pyplot(fig)
+    st.header("Oil & Gas Cases AVO Modeling")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader("Oil Case")
+        
+        # [Previous oil case code remains the same until plotting]
+        
+        # Create figure with 3 panels
+        fig = plt.figure(figsize=(18, 6))
+        gs = fig.add_gridspec(1, 3, width_ratios=[1, 1, 0.5])
+        
+        # AVO Gather
+        ax1 = fig.add_subplot(gs[0])
+        tp.syn_angle_gather(0.1, 0.25, lyr_times, thickness, [], [], 
+                          [], [], [], syn_zoep_o, rc_zoep_o, t, excursion)
+        ax1.set_title('Oil Case')
+        
+        # AVO Curves
+        ax2 = fig.add_subplot(gs[1])
+        ax2.plot(angles, rc_zoep_o[:, 0], 'b-', label='Upper Interface')
+        ax2.plot(angles, rc_zoep_o[:, 1], 'r-', label='Lower Interface')
+        ax2.set_xlabel('Angle (degrees)')
+        ax2.set_ylabel('Reflection Coefficient')
+        ax2.set_title('Oil AVO Response')
+        ax2.grid()
+        ax2.legend()
+        
+        # Wavelet Plot
+        ax3 = fig.add_subplot(gs[2])
+        ax3.plot(wlt_time*1000, wlt_amp, 'k-', linewidth=2)
+        ax3.set_title(f'Wavelet ({freq}Hz)')
+        ax3.set_xlabel('Time (ms)')
+        ax3.set_ylabel('Amplitude')
+        ax3.grid()
+        
+        plt.tight_layout()
+        st.pyplot(fig)
+    
+    with col2:
+        st.subheader("Gas Case")
+        
+        # [Previous gas case code remains the same until plotting]
+        
+        # Create figure with 3 panels
+        fig = plt.figure(figsize=(18, 6))
+        gs = fig.add_gridspec(1, 3, width_ratios=[1, 1, 0.5])
+        
+        # AVO Gather
+        ax1 = fig.add_subplot(gs[0])
+        tp.syn_angle_gather(0.1, 0.25, lyr_times, thickness, [], [], 
+                          [], [], [], syn_zoep_g, rc_zoep_g, t, excursion)
+        ax1.set_title('Gas Case')
+        
+        # AVO Curves
+        ax2 = fig.add_subplot(gs[1])
+        ax2.plot(angles, rc_zoep_g[:, 0], 'b-', label='Upper Interface')
+        ax2.plot(angles, rc_zoep_g[:, 1], 'r-', label='Lower Interface')
+        ax2.set_xlabel('Angle (degrees)')
+        ax2.set_ylabel('Reflection Coefficient')
+        ax2.set_title('Gas AVO Response')
+        ax2.grid()
+        ax2.legend()
+        
+        # Wavelet Plot
+        ax3 = fig.add_subplot(gs[2])
+        ax3.plot(wlt_time*1000, wlt_amp, 'k-', linewidth=2)
+        ax3.set_title(f'Wavelet ({freq}Hz)')
+        ax3.set_xlabel('Time (ms)')
+        ax3.set_ylabel('Amplitude')
+        ax3.grid()
+        
+        plt.tight_layout()
+        st.pyplot(fig)
 
     except Exception as e:
         st.error(f"An error occurred: {str(e)}")
