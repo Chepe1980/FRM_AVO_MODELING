@@ -305,15 +305,15 @@ if uploaded_file is not None:
                 t_samp = tp.time_samples(t_min=0, t_max=0.5)
                 t = np.array(t_samp)
                 
-                # Generate synthetic gathers - FIXED
+                # Generate synthetic gathers with proper dimensions
                 syn_zoep = np.zeros((nangles, len(t_samp)))
-                lyr_times = np.zeros(nangles)  # Pre-allocate as array
+                lyr_times = np.zeros(nangles)
                 
                 for angle in range(0, nangles):
                     z_int = tp.int_depth(h_int=[500.0], thickness=10)
                     t_int = tp.calc_times(z_int, vp_data)
-                    lyr_times[angle] = t_int[0]  # Store as scalar
-                    rc = tp.mod_digitize(rc_zoep[angle], t_int, t_samp)
+                    lyr_times[angle] = t_int[0]  # Store single value
+                    rc = tp.mod_digitize(rc_zoep[angle], [t_int[0]], t_samp)  # Pass as list with one element
                     syn_zoep[angle] = tp.syn_seis(ref_coef=rc, wav_amp=wlt_amp)
                 
                 rc_zoep = np.array(rc_zoep)
@@ -322,14 +322,14 @@ if uploaded_file is not None:
                 fig = plt.figure(figsize=(18, 6))
                 gs = fig.add_gridspec(1, 3, width_ratios=[1, 1, 0.5])
                 
-                # AVO Gather - FIXED
+                # AVO Gather with proper dimensions
                 ax1 = fig.add_subplot(gs[0])
                 with st.spinner('Generating Brine AVO Gather...'):
                     try:
                         tp.syn_angle_gather(0.1, 0.25, lyr_times, thickness,
-                                          np.zeros(1), np.zeros(1),  # Changed from empty arrays
-                                          np.zeros(1), np.zeros(1),
-                                          np.zeros(1), syn_zoep,
+                                          np.array([vp_mean]), np.array([vs_mean]),
+                                          np.array([rho_mean]), np.array([vp_mean/vs_mean]),
+                                          np.array([vp_mean*rho_mean]), syn_zoep,
                                           rc_zoep, t, excursion)
                         ax1.set_title(f'Brine Case - {freq}Hz Wavelet')
                     except Exception as e:
@@ -385,34 +385,32 @@ if uploaded_file is not None:
                     vs_data = [vs_mean, vs_mean*0.95, vs_mean*1.05]
                     rho_data = [rho_mean, rho_mean*0.95, rho_mean*1.05]
                     
-                    # Generate AVO response - FIXED
-                    rc_zoep_o = np.zeros((nangles, 2))  # Pre-allocate
+                    # Generate AVO response with proper dimensions
+                    rc_zoep_o = np.zeros((nangles, 2))
                     for angle in range(0, nangles):
                         theta1_samp, rc_1, rc_2 = tp.calc_theta_rc(theta1_min=0, theta1_step=1,
                                                                   vp=vp_data, vs=vs_data, rho=rho_data, ang=angle)
                         rc_zoep_o[angle] = [rc_1[0, 0], rc_2[0, 0]]
                     
-                    # Generate synthetic gathers - FIXED
+                    # Generate synthetic gathers with proper dimensions
                     syn_zoep_o = np.zeros((nangles, len(t_samp)))
                     for angle in range(0, nangles):
                         t_int = np.array([lyr_times[angle]])  # Ensure array input
                         rc = tp.mod_digitize(rc_zoep_o[angle], t_int, t_samp)
                         syn_zoep_o[angle] = tp.syn_seis(ref_coef=rc, wav_amp=wlt_amp)
                     
-                    rc_zoep_o = np.array(rc_zoep_o)
-                    
                     # Create figure for oil case
                     fig = plt.figure(figsize=(18, 6))
                     gs = fig.add_gridspec(1, 3, width_ratios=[1, 1, 0.5])
                     
-                    # AVO Gather
+                    # AVO Gather with proper dimensions
                     ax1 = fig.add_subplot(gs[0])
                     with st.spinner('Generating Oil AVO Gather...'):
                         try:
                             tp.syn_angle_gather(0.1, 0.25, lyr_times, thickness,
-                                              np.zeros(1), np.zeros(1),
-                                              np.zeros(1), np.zeros(1),
-                                              np.zeros(1), syn_zoep_o,
+                                              np.array([vp_mean]), np.array([vs_mean]),
+                                              np.array([rho_mean]), np.array([vp_mean/vs_mean]),
+                                              np.array([vp_mean*rho_mean]), syn_zoep_o,
                                               rc_zoep_o, t, excursion)
                             ax1.set_title('Oil Case')
                         except Exception as e:
@@ -457,34 +455,32 @@ if uploaded_file is not None:
                     vs_data = [vs_mean, vs_mean*0.95, vs_mean*1.05]
                     rho_data = [rho_mean, rho_mean*0.95, rho_mean*1.05]
                     
-                    # Generate AVO response for gas
-                    rc_zoep_g = np.zeros((nangles, 2))  # Pre-allocate
+                    # Generate AVO response with proper dimensions
+                    rc_zoep_g = np.zeros((nangles, 2))
                     for angle in range(0, nangles):
                         theta1_samp, rc_1, rc_2 = tp.calc_theta_rc(theta1_min=0, theta1_step=1,
                                                                   vp=vp_data, vs=vs_data, rho=rho_data, ang=angle)
                         rc_zoep_g[angle] = [rc_1[0, 0], rc_2[0, 0]]
                     
-                    # Generate synthetic gathers for gas
+                    # Generate synthetic gathers with proper dimensions
                     syn_zoep_g = np.zeros((nangles, len(t_samp)))
                     for angle in range(0, nangles):
                         t_int = np.array([lyr_times[angle]])  # Ensure array input
                         rc = tp.mod_digitize(rc_zoep_g[angle], t_int, t_samp)
                         syn_zoep_g[angle] = tp.syn_seis(ref_coef=rc, wav_amp=wlt_amp)
                     
-                    rc_zoep_g = np.array(rc_zoep_g)
-                    
                     # Create figure for gas case
                     fig = plt.figure(figsize=(18, 6))
                     gs = fig.add_gridspec(1, 3, width_ratios=[1, 1, 0.5])
                     
-                    # AVO Gather
+                    # AVO Gather with proper dimensions
                     ax1 = fig.add_subplot(gs[0])
                     with st.spinner('Generating Gas AVO Gather...'):
                         try:
                             tp.syn_angle_gather(0.1, 0.25, lyr_times, thickness,
-                                              np.zeros(1), np.zeros(1),
-                                              np.zeros(1), np.zeros(1),
-                                              np.zeros(1), syn_zoep_g,
+                                              np.array([vp_mean]), np.array([vs_mean]),
+                                              np.array([rho_mean]), np.array([vp_mean/vs_mean]),
+                                              np.array([vp_mean*rho_mean]), syn_zoep_g,
                                               rc_zoep_g, t, excursion)
                             ax1.set_title('Gas Case')
                         except Exception as e:
