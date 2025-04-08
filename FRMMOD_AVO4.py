@@ -158,7 +158,7 @@ if uploaded_file:
             st.pyplot(fig)
 
         with tab3:
-    st.header("Brine Case AVO Modeling")
+            st.header("Brine Case AVO Modeling")
     try:
         # Get properties for selected zone
         vp = logs.loc[(logs[depth_col] >= ztop) & (logs[depth_col] <= zbot), 'VP_FRMB'].values
