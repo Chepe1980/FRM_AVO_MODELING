@@ -66,8 +66,8 @@ with st.sidebar:
 
         st.subheader("Mineral Properties")
         rho_qz = st.number_input("Quartz Density (g/cc)", 2.65)
-        k_qz = st.number_input("Quartz Bulk Modulus (GPa)", 0.0)
-        mu_qz = st.number_input("Quartz Shear Modulus (GPa)", 0.0)
+        k_qz = st.number_input("Quartz Bulk Modulus (GPa)", 37.0)
+        mu_qz = st.number_input("Quartz Shear Modulus (GPa)", 44.0)
         rho_sh = st.number_input("Shale Density (g/cc)", 2.81)
         k_sh = st.number_input("Shale Bulk Modulus (GPa)", 15.0)
         mu_sh = st.number_input("Shale Shear Modulus (GPa)", 5.0)
